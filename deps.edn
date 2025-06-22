@@ -1,0 +1,6 @@
+{:paths ["src" "resources"]
+ :deps  {org.clojure/clojure {:mvn/version "1.12.0"}
+         com.datomic/peer    {:mvn/version "1.0.6733"}
+         cloudafrica/eacl    {;:local/root "/Users/petrus/code/eacl"
+                              :git/url "git@github.com:cloudafrica/eacl.git"
+                              :git/sha "3d0884dda2e73c4a5a603d23c325150709ac8c30"}}}
