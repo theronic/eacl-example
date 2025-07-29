@@ -11,31 +11,31 @@
 (def conn (d/connect datomic-uri))
 
 ; Install the latest EACL Datomic Schema:
-@(d/transact conn schema/v4-schema)
+@(d/transact conn schema/v6-schema)
 
 ; Transact your permission schema (details below).
 @(d/transact conn
              [; Account:
               (Relation :account :owner :user)              ; relation owner: user
-              (Permission :account :owner :admin)
-              (Permission :account :owner :update_billing_details)
+              (Permission :account :admin {:relation :owner})
+              (Permission :account :update_billing_details {:relation :owner})
 
               ; Product:
               (Relation :product :account :account)         ; relation account: account
-              (Permission :product :account :admin :update_sku)]) ; permission update_sku = account->admin
+              (Permission :product :update_sku {:arrow :account :permission :admin})]) ; permission update_sku = account->admin
 
 ; Transact some Datomic test entities with `:eacl/type` & `:eacl/id`:
 @(d/transact conn
-             [{:eacl/type :user, :eacl/id "user-1"}
-              {:eacl/type :user, :eacl/id "user-2"}
+             [{:eacl/id "user-1"}
+              {:eacl/id "user-2"}
 
-              {:eacl/type :account, :eacl/id "account-1"}
+              {:eacl/id "account-1"}
 
-              {:eacl/type :product, :eacl/id "product-1"}
-              {:eacl/type :product, :eacl/id "product-2"}])
+              {:eacl/id "product-1"}
+              {:eacl/id "product-2"}])
 
 ;  Make an EACL client that satisfies the `IAuthorization` protocol:
-(def acl (eacl.datomic.core/make-client conn))
+(def acl (eacl.datomic.core/make-client conn {}))
 
 ; Define some convenience methods over spice-object:
 (def ->user (partial spice-object :user))
@@ -59,11 +59,23 @@
 ; => false
 
 ; Enumerate resources via `lookup-resources`:
-(eacl/lookup-resources acl
-                       {:subject       (->user "user-1")
-                        :permission    :update_sku
-                        :resource/type :product
-                        :limit         1000
-                        :cursor        nil})
-; => {:data [{:type :product, :id "product-1"}]
-;     :cursor 'cursor}
+(def page1 (eacl/lookup-resources acl
+                                  {:subject       (->user "user-1")
+                                   :permission    :update_sku
+                                   :resource/type :product
+                                   :limit         5
+                                   :cursor        nil}))
+
+; => {:data (#eacl.core.SpiceObject{:type :product, :id "product-1", :relation nil}),
+;    :cursor {:resource #eacl.core.SpiceObject{:type :product, :id "product-1", :relation nil}}}
+; (note how cursor has last-resource)
+
+; we cann pass the cursor from page 1 for more results, wich in this case is empty:
+(def page2 (eacl/lookup-resources acl
+                                  {:subject       (->user "user-1")
+                                   :permission    :update_sku
+                                   :resource/type :product
+                                   :limit         10
+                                   :cursor        (:cursor page1)}))
+; => {:data [] ; empty because no more results
+;     :cursor 'next-cursor}
