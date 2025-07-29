@@ -9,7 +9,7 @@ The ~70 lines in [`src/eacl_example/core.clj`](./src/eacl_example/core.clj) show
   - where a user can own an account,
   - a product has under an account, and
   - users havae basic permissions.
-4. Transact some permissioned entities, which must have `:eacl/type` & `:eacl/id` attributes.
+4. Transact some permissioned entities.
 5. Transact some relationships for `[user :owner account]` & `[account :account product]` so EACL can traverse the graph betweend `user -> account <- product`.
 6. Run some `eacl/can?` permission checks, which return `true` or `false`.
 7. Enumerate the resources a subject can access via `eacl/lookup-resources`.
@@ -20,6 +20,6 @@ If you'd like to try this from your project, you'll need the Datomic Peer librar
 
 ```clojure
 cloudafrica/eacl {:git/url "git@github.com:cloudafrica/eacl.git"
-                  :git/sha "ed3c437ac94f3c4049e838a794f3a6987d1eb1d1"}
+                  :git/sha "715ad6eed9f8b100e502909395126cef65cca27d"}
 ```
 (or use a newer `:git/sha`, until EACL is published on Clojars)
